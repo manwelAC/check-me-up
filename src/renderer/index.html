@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.google.com; connect-src 'self';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>check-me-up Focus Dashboard</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="setup-overlay hidden" id="setupOverlay">
+    <div class="setup-panel">
+      <div class="setup-kicker">first run</div>
+      <h1>check-me-up</h1>
+      <p class="setup-copy">Tell the app what to call you. This stays on this device and is only used for reports, summaries, and personalization.</p>
+      <form id="setupForm" class="setup-form">
+        <label for="setupUserName">display name</label>
+        <input id="setupUserName" class="styled-input" type="text" autocomplete="name" maxlength="48" placeholder="e.g. Manwel" required>
+        <button class="primary-btn" type="submit">continue</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Titlebar for Frameless Window -->
+  <div class="titlebar">
+    <div class="titlebar-logo">
+      <span class="emoji">🕵️</span>
+      <span class="titlebar-text">check-me-up</span>
+    </div>
+    <div class="titlebar-drag-region"></div>
+    <div class="titlebar-controls">
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Toggle light/dark mode">light</button>
+      <button class="control-btn minimize-btn" id="minimizeBtn" title="Minimize to Tray">&#8212;</button>
+      <button class="control-btn maximize-btn" id="maximizeBtn" title="Maximize/Restore">&#x25A2;</button>
+      <button class="control-btn close-btn" id="closeBtn" title="Close to Tray">&#x2715;</button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <span class="brand-kicker">local focus system</span>
+          <span class="brand-name">check-me-up</span>
+          <span class="brand-user" id="sidebarUserName">setup pending</span>
+        </div>
+
+        <nav class="nav-menu">
+          <div class="nav-section-label">observe</div>
+          <a href="#" class="nav-item active" data-tab="dashboard">
+            <span class="nav-index">01</span>
+            <span class="nav-label">Dashboard</span>
+          </a>
+          <a href="#" class="nav-item" data-tab="weekly">
+            <span class="nav-index">02</span>
+            <span class="nav-label">Weekly Report</span>
+          </a>
+          <a href="#" class="nav-item" data-tab="timeline">
+            <span class="nav-index">03</span>
+            <span class="nav-label">Timeline</span>
+          </a>
+
+          <div class="nav-section-label">control</div>
+          <a href="#" class="nav-item" data-tab="classifications">
+            <span class="nav-index">04</span>
+            <span class="nav-label">Categories</span>
+          </a>
+          <a href="#" class="nav-item" data-tab="database">
+            <span class="nav-index">05</span>
+            <span class="nav-label">Housekeeping</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status">
+          <span class="sidebar-status-dot"></span>
+          <span id="sidebarStatusText">offline</span>
+        </div>
+        <div class="sidebar-meta">
+          <span>private by default</span>
+          <span>local sqlite</span>
+        </div>
+        <span class="footer-text">made by manwelAC</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard" class="tab-panel active">
+        <header class="content-header">
+          <div>
+            <h1>Focus Dashboard</h1>
+            <p class="subtitle" id="current-date-label">Today's real-time productivity breakdown</p>
+          </div>
+          <div class="status-badge-container">
+            <button id="toggleDaemonBtn" class="daemon-toggle-btn">Start Tracking</button>
+            <div id="status-badge" class="status-badge offline">
+              <span class="badge-dot"></span>
+              <span class="badge-text" id="status-text">OFFLINE</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Real-time Active App Monitor (Large Hero Card) -->
+        <div class="hero-card">
+          <div class="hero-icon-container">
+            <img class="hero-app-icon" id="hero-app-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='rgba(255,255,255,0.25)' d='M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10a10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 2a8 8 0 0 1 8 8a8 8 0 0 1-8 8a8 8 0 0 1-8-8a8 8 0 0 1 8-8'/%3E%3C/svg%3E" alt="App Icon">
+          </div>
+          <div class="hero-main">
+            <div class="hero-label">CURRENTLY FOCUSING ON</div>
+            <div class="hero-app-name" id="hero-app-name">No Active Session</div>
+            <div class="hero-window-title" id="hero-window-title">Daemon is inactive or you are in an ignored window</div>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat-box">
+              <span class="stat-label">SESSION LENGTH</span>
+              <span class="stat-value" id="hero-session-duration">-</span>
+            </div>
+            <div class="hero-stat-box">
+              <span class="stat-label">TRACKED SINCE</span>
+              <span class="stat-value" id="hero-session-since">-</span>
+            </div>
+          </div>
+        </div>
+        <!-- Focus Heatmap Card (GitHub contribution style) -->
+        <div class="card heatmap-card">
+          <div class="heatmap-header">
+            <div>
+              <h2>Productivity Calendar</h2>
+              <p class="subtitle" id="heatmap-range-label">Select a date range to review daily focus scores</p>
+            </div>
+            <div class="calendar-controls">
+              <label class="calendar-date-field" for="calendar-date-from">
+                <span>From</span>
+                <input type="date" id="calendar-date-from">
+              </label>
+              <label class="calendar-date-field" for="calendar-date-to">
+                <span>To</span>
+                <input type="date" id="calendar-date-to">
+              </label>
+              <button class="secondary-btn calendar-apply-btn" id="calendar-apply-btn">Apply</button>
+            </div>
+            <div class="heatmap-legend">
+              <span>Less</span>
+              <div class="legend-box level-0"></div>
+              <div class="legend-box level-1"></div>
+              <div class="legend-box level-2"></div>
+              <div class="legend-box level-3"></div>
+              <div class="legend-box level-4"></div>
+              <span>More</span>
+            </div>
+          </div>
+          
+          <div class="heatmap-container-outer">
+            <div class="heatmap-wrapper">
+              <div class="heatmap-grid" id="heatmap-grid-container">
+                <!-- Dynamically populated by JS -->
+              </div>
+            </div>
+          </div>
+          
+          <div class="heatmap-footer" id="heatmap-streak-info">
+            Daily Productivity Streak: 0 days - Max Streak: 0 days
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Focus Streak Card (Pressure-free) -->
+          <div class="card streak-card">
+            <h2>Focus Streak</h2>
+            <div class="streak-dial-container">
+              <span class="streak-emoji">🔥</span>
+              <div class="streak-value" id="dash-current-streak">0</div>
+              <div class="streak-label">Days Focused</div>
+            </div>
+            <div class="card-footer-tip" id="dash-longest-streak-tip">
+              Longest streak: 0 days
+            </div>
+          </div>
+
+          <!-- Metrics summary grid -->
+          <div class="card metrics-card">
+            <h2>Today's Durations</h2>
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <div class="metric-box-title">Total Tracked</div>
+                <div class="metric-box-value" id="metric-total-tracked">0h 00m</div>
+              </div>
+              <div class="metric-box productive">
+                <div class="metric-box-title">Active Productive</div>
+                <div class="metric-box-value" id="metric-active-productive">0h 00m</div>
+              </div>
+              <div class="metric-box distracting">
+                <div class="metric-box-title">Active Distracting</div>
+                <div class="metric-box-value" id="metric-active-distracting">0h 00m</div>
+              </div>
+              <div class="metric-box neutral">
+                <div class="metric-box-title">Active Neutral</div>
+                <div class="metric-box-value" id="metric-active-neutral">0h 00m</div>
+              </div>
+              <div class="metric-box idle">
+                <div class="metric-box-title">Idle Time</div>
+                <div class="metric-box-value" id="metric-idle-time">0h 00m</div>
+              </div>
+              <div class="metric-box streak">
+                <div class="metric-box-title">Longest Focus Streak</div>
+                <div class="metric-box-value" id="metric-longest-streak">0h 00m</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card daily-rhythm-card">
+          <div class="rhythm-header">
+            <div>
+              <h2>Daily Start / End</h2>
+              <p class="subtitle">Your working envelope and most active hour today</p>
+            </div>
+          </div>
+          <div class="rhythm-grid">
+            <div class="rhythm-item">
+              <span class="rhythm-label">First activity</span>
+              <span class="rhythm-value" id="rhythm-first-activity">-</span>
+            </div>
+            <div class="rhythm-item">
+              <span class="rhythm-label">Last activity</span>
+              <span class="rhythm-value" id="rhythm-last-activity">-</span>
+            </div>
+            <div class="rhythm-item">
+              <span class="rhythm-label">Active span</span>
+              <span class="rhythm-value" id="rhythm-active-span">0h 00m</span>
+            </div>
+            <div class="rhythm-item">
+              <span class="rhythm-label">Most active hour</span>
+              <span class="rhythm-value" id="rhythm-active-hour">-</span>
+              <span class="rhythm-meta" id="rhythm-active-hour-duration">0h 00m tracked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Apps visual lists -->
+        <div class="card full-width-card">
+          <h2>Top Tracked Applications Today</h2>
+          <div class="apps-list-header">
+            <span class="col-app">APPLICATION</span>
+            <span class="col-bar">DISTRIBUTION</span>
+            <span class="col-duration">DURATION</span>
+            <span class="col-tag">CATEGORY</span>
+          </div>
+          <div class="apps-list" id="top-apps-container">
+            <div class="no-data-placeholder">No applications tracked yet today. Keep tracking!</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TIMELINE TAB -->
+      <section id="tab-timeline" class="tab-panel">
+        <header class="content-header">
+          <div>
+            <h1>Daily Timeline</h1>
+            <p class="subtitle">Chronological flow of today's tracked sessions</p>
+          </div>
+        </header>
+
+        <div class="card full-width-card timeline-card">
+          <div class="timeline-header">
+            <div>
+              <h2>Today’s Session Flow</h2>
+              <p class="subtitle">App switches, idle periods, durations, and category context</p>
+            </div>
+          </div>
+          <div class="timeline-list" id="daily-timeline-container">
+            <div class="no-data-placeholder">No timeline sessions tracked yet today.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WEEKLY TAB -->
+      <section id="tab-weekly" class="tab-panel">
+        <header class="content-header">
+          <div>
+            <h1>Weekly Focus Breakdown</h1>
+            <p class="subtitle" id="weekly-range-label">Monday - Sunday summary</p>
+          </div>
+        </header>
+
+        <div class="weekly-metrics-row">
+          <div class="weekly-metric-card">
+            <span class="weekly-metric-label">WEEKLY FOCUS SCORE</span>
+            <span class="weekly-metric-value" id="weekly-focus-score">0%</span>
+          </div>
+          <div class="weekly-metric-card">
+            <span class="weekly-metric-label">TOTAL WORK TIME</span>
+            <span class="weekly-metric-value" id="weekly-active-time">0h 00m</span>
+          </div>
+          <div class="weekly-metric-card">
+            <span class="weekly-metric-label">TOTAL WALK AWAY (IDLE)</span>
+            <span class="weekly-metric-value" id="weekly-idle-time">0h 00m</span>
+          </div>
+        </div>
+
+        <section class="weekly-insights-section">
+          <div class="weekly-insights-header">
+            <div>
+              <h2>Weekly Insights</h2>
+              <p class="subtitle">Patterns pulled from your focus score, app categories, and distraction windows</p>
+            </div>
+          </div>
+          <div class="weekly-insight" id="weekly-insight-box">
+            No weekly insight calculated yet.
+          </div>
+        </section>
+
+        <!-- Daily Breakdown interactive chart bars -->
+        <div class="card">
+          <h2>Daily Work Hours</h2>
+          <div class="weekly-chart" id="weekly-chart-bars">
+            <!-- Programmatically rendered -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Weekly Top Applications</h2>
+          <div class="apps-list-header">
+            <span class="col-app">APPLICATION</span>
+            <span class="col-bar">DISTRIBUTION</span>
+            <span class="col-duration">DURATION</span>
+            <span class="col-tag">CATEGORY</span>
+          </div>
+          <div class="apps-list" id="weekly-top-apps">
+            <!-- Programmatically rendered -->
+          </div>
+        </div>
+      </section>
+
+      <!-- CATEGORIES TAB -->
+      <section id="tab-classifications" class="tab-panel">
+        <header class="content-header">
+          <div>
+            <h1>Category Classifications</h1>
+            <p class="subtitle">Assign applications to productive, distracting, or ignored pools</p>
+          </div>
+          <button id="saveConfigBtn" class="primary-btn">Save Configurations</button>
+        </header>
+
+        <div class="card picker-card">
+          <div class="picker-header">
+            <div>
+              <h2>Discovered Apps & Browser Tabs</h2>
+              <p class="config-desc">Pick from apps found on this PC and browser pages already seen by the tracker.</p>
+            </div>
+            <select id="picker-target-category" class="styled-select compact-select">
+              <option value="productive">Productive</option>
+              <option value="distracting">Distracting</option>
+              <option value="ignored">Ignored</option>
+            </select>
+          </div>
+          <input id="classification-search" class="styled-input picker-search" type="text" placeholder="Search installed apps, tracked apps, or browser tabs...">
+          <div class="picker-columns">
+            <div>
+              <div class="picker-section-title">Windows Apps</div>
+              <div id="app-suggestions" class="suggestion-list">
+                <div class="no-data-placeholder">Loading apps...</div>
+              </div>
+            </div>
+            <div>
+              <div class="picker-section-title">Browser Tabs / Sites</div>
+              <div id="browser-tab-suggestions" class="suggestion-list">
+                <div class="no-data-placeholder">Tracked browser tabs will appear here.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="config-sections">
+          <!-- Productive Card -->
+          <div class="card config-card productive">
+            <div class="config-card-header">
+              <h2>Productive Applications</h2>
+              <span class="badge productive">✅ Productive</span>
+            </div>
+            <p class="config-desc">Apps that contribute directly to focused working time (e.g. IDEs, compilers, design tools).</p>
+            <div class="tag-input-container">
+              <div class="tags-container" id="productive-tags"></div>
+              <input type="text" class="tag-input-field" placeholder="Add app..." data-category="productive">
+            </div>
+          </div>
+
+          <!-- Distracting Card -->
+          <div class="card config-card distracting">
+            <div class="config-card-header">
+              <h2>Distracting Applications</h2>
+              <span class="badge distracting">❌ Distracting</span>
+            </div>
+            <p class="config-desc">Apps that draw attention away from focus blocks (e.g. social media, entertainment sites).</p>
+            <div class="tag-input-container">
+              <div class="tags-container" id="distracting-tags"></div>
+              <input type="text" class="tag-input-field" placeholder="Add app..." data-category="distracting">
+            </div>
+          </div>
+
+          <!-- Ignored Card -->
+          <div class="card config-card ignored">
+            <div class="config-card-header">
+              <h2>Ignored / Paused Applications</h2>
+              <span class="badge ignored">🚫 Excluded</span>
+            </div>
+            <p class="config-desc">Apps that are completely excluded from tracked timelines (e.g. terminals, shell hosts, lockscreens).</p>
+            <div class="tag-input-container">
+              <div class="tags-container" id="ignored-tags"></div>
+              <input type="text" class="tag-input-field" placeholder="Add app..." data-category="ignored">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DATABASE/HOUSEKEEPING TAB -->
+      <section id="tab-database" class="tab-panel">
+        <header class="content-header">
+          <div>
+            <h1>Housekeeping & Data Controls</h1>
+            <p class="subtitle">Manage local storage thresholds and database sizes</p>
+          </div>
+        </header>
+
+        <div class="db-controls-grid">
+          <div class="card">
+            <h2>User Profile</h2>
+            <p class="config-desc">Update the display name used in the sidebar, dashboard subtitles, and reports.</p>
+            <div class="input-row">
+              <div class="input-group">
+                <label for="profile-user-name">Display name</label>
+                <input type="text" id="profile-user-name" class="styled-input" maxlength="48" placeholder="e.g. Manwel">
+              </div>
+              <button id="saveProfileBtn" class="secondary-btn">Update Profile</button>
+            </div>
+          </div>
+
+          <!-- Idle Threshold Configuration -->
+          <div class="card">
+            <h2>Idle State Detection</h2>
+            <p class="config-desc">Amount of inactive time (no mouse or keyboard inputs) required before the system logs you as Idle.</p>
+            <div class="input-row">
+              <div class="input-group">
+                <label for="idle_threshold">Threshold (seconds)</label>
+                <input type="number" id="idle_threshold" class="styled-input" min="5" value="60">
+              </div>
+              <button id="saveThresholdBtn" class="secondary-btn">Update Threshold</button>
+            </div>
+          </div>
+
+          <!-- Clear Database -->
+          <div class="card">
+            <h2>Purge History Logs</h2>
+            <p class="config-desc">Permanently erase tracking history older than a specified duration. **This action cannot be undone**.</p>
+            <div class="input-row">
+              <select id="purge-duration" class="styled-select">
+                <option value="90d">90 Days</option>
+                <option value="30d" selected>30 Days</option>
+                <option value="7d">7 Days</option>
+                <option value="1d">24 Hours</option>
+              </select>
+              <button id="purgeBtn" class="danger-btn">Purge Logs</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="renderer.js" type="module"></script>
+</body>
+</html>
